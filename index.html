@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>React Hooks Örneği</title>
+  <!-- React ve ReactDOM kütüphanelerini CDN üzerinden dahil etme -->
+  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <!-- JSX kodunu tarayıcıda çalıştırmak için Babel'i CDN üzerinden dahil etme -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 20px; background-color: #f4f7f6; color: #333; }
+    .container { max-width: 800px; margin: 0 auto; padding: 20px; background-color: #fff; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+    h1 { color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px; margin-bottom: 20px; }
+    h3 { color: #34495e; margin-top: 25px; }
+    .component-box { border: 1px solid #e0e0e0; padding: 15px; margin-bottom: 20px; border-radius: 6px; background-color: #fdfdfd; }
+    button { background-color: #3498db; color: white; border: none; padding: 10px 18px; margin-right: 10px; border-radius: 5px; cursor: pointer; font-size: 16px; transition: background-color 0.2s ease; }
+    button:hover { background-color: #2980b9; }
+    p { line-height: 1.6; }
+    .error-message { color: #e74c3c; font-weight: bold; }
+    .loading-message { color: #f39c12; }
+  </style>
+</head>
+<body>
+  <div id="root" class="container"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+
+    // Bu bileşen, React'ın useState Hook'unu kullanarak basit bir sayacı yönetir.
+    function Counter() {
+      // useState Hook'u: 'count' adında bir durum değişkeni ve onu güncelleyen 'setCount' fonksiyonu tanımlar.
+      // Başlangıç değeri 0'dır. Bu, fonksiyonel bileşenlerde durum yönetimini sağlar.
+      const [count, setCount] = useState(0);
+
+      return (
+        <div className="component-box">
+          <h3>Sayaç Bileşeni (Counter Component)</h3>
+          <p>Mevcut Sayı: <strong>{count}</strong></p>
+          <button onClick={() => setCount(count + 1)}>Arttır</button>
+          <button onClick={() => setCount(count - 1)}>Azalt</button>
+        </div>
+      );
+    }
+
+    // Bu bileşen, useEffect Hook'unu kullanarak yan etkileri (örneğin, veri çekme veya DOM manipülasyonu) yönetir.
+    function DataFetcher() {
+      const [data, setData] = useState(null);
+      const [loading, setLoading] = useState(true);
+      const [error, setError] = useState(null);
+
+      // useEffect Hook'u: Her render işleminden sonra yan etkileri çalıştırır.
+      // Boş bağımlılık dizisi `[]`, bu etkinin yalnızca ilk render işleminden sonra bir kez çalışacağı anlamına gelir
+      // (sınıf bileşenlerindeki componentDidMount'a benzer).
+      useEffect(() => {
+        const fetchData = async () => {
+          try {
+            setLoading(true);
+            // Ağ gecikmesini simüle etme
+            await new Promise(resolve => setTimeout(resolve, 1500));
+            // Sahte API yanıtı
+            const response = { message: "API'den gelen veri: React Hooks harika!", id: 12345 };
+            setData(response);
+          } catch (err) {
+            setError("Veri yüklenirken bir hata oluştu.");
+          } finally {
+            setLoading(false);
+          }
+        };
+
+        fetchData();
+
+        // İsteğe bağlı temizleme fonksiyonu (sınıf bileşenlerindeki componentWillUnmount'a benzer).
+        // Bileşen DOM'dan kaldırıldığında çalışır.
+        return () => {
+          console.log("DataFetcher bileşeni temizlendi.");
+        };
+      }, []); // Boş bağımlılık dizisi: Yalnızca bileşen bağlandığında (mount) çalışır.
+
+      // Başka bir useEffect: Bileşenin durumuna göre belge başlığını günceller.
+      // Bu etki, 'data' durumu her değiştiğinde yeniden çalışır.
+      useEffect(() => {
+        if (data) {
+          document.title = `Veri Yüklendi: ${data.id}`; // data değiştiğinde başlığı güncelle
+        } else {
+          document.title = 'React Hooks Örneği'; // data yoksa varsayılan başlık
+        }
+      }, [data]); // Bağımlılık dizisi 'data' içerir, bu nedenle 'data' değiştiğinde yeniden çalışır.
+
+      if (loading) return <div className="component-box"><p className="loading-message">Veriler yükleniyor...</p></div>;
+      if (error) return <div className="component-box"><p className="error-message">Hata: {error}</p></div>;
+
+      return (
+        <div className="component-box">
+          <h3>Veri Çekici Bileşen (Data Fetcher Component)</h3>
+          <p>{data ? data.message : 'Veri yok.'}</p>
+          <p>Veri ID: <strong>{data ? data.id : 'N/A'}</strong></p>
+        </div>
+      );
+    }
+
+    // Ana Uygulama bileşeni
+    function App() {
+      return (
+        <div>
+          <h1>React Hooks: useState ve useEffect Örneği</h1>
+          <p>Bu örnek, React Hooks'un (<code>useState</code> ve <code>useEffect</code>) fonksiyonel bileşenlerde durum yönetimi ve yan etkilerin nasıl kullanıldığını gösterir. Hooks'lar, sınıf bileşenlerine ihtiyaç duymadan bu yetenekleri fonksiyonel bileşenlere getirir.</p>
+          <Counter />
+          <DataFetcher />
+        </div>
+      );
+    }
+
+    // App bileşenini 'root' div'ine render et
+    ReactDOM.render(<App />, document.getElementById('root'));
+  </script>
+</body>
+</html>
